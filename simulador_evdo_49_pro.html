@@ -1,0 +1,858 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Simulador EVDO - 49 Preguntas | Habilidades y Actitudes de Responsabilidad Profesional</title>
+    <style>
+        :root {
+            --primary: #1e3a8a;
+            --primary-light: #3b82f6;
+            --primary-dark: #1e40af;
+            --secondary: #059669;
+            --accent: #8b5cf6;
+            --bg: #f1f5f9;
+            --card: #ffffff;
+            --text: #1e293b;
+            --text-light: #64748b;
+            --border: #e2e8f0;
+            --success: #10b981;
+            --warning: #f59e0b;
+            --danger: #ef4444;
+            --info: #0ea5e9;
+            --shadow: 0 4px 6px -1px rgba(0,0,0,0.1);
+            --shadow-lg: 0 10px 15px -3px rgba(0,0,0,0.1);
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', system-ui, sans-serif; }
+        body { background: var(--bg); color: var(--text); line-height: 1.6; min-height: 100vh; }
+
+        .header {
+            background: linear-gradient(135deg, var(--primary) 0%, var(--primary-light) 100%);
+            color: white; padding: 25px 20px; text-align: center;
+            box-shadow: var(--shadow-lg);
+        }
+        .header h1 { font-size: 1.7rem; margin-bottom: 5px; font-weight: 700; }
+        .header p { font-size: 0.95rem; opacity: 0.95; }
+
+        .progress-container {
+            position: sticky; top: 0; z-index: 100; background: white;
+            padding: 15px 20px; box-shadow: var(--shadow);
+            display: flex; align-items: center; gap: 15px; flex-wrap: wrap;
+        }
+        .timer {
+            background: var(--primary); color: white;
+            padding: 8px 15px; border-radius: 20px;
+            font-weight: 700; font-size: 0.95rem;
+            display: flex; align-items: center; gap: 6px;
+            font-family: 'Courier New', monospace;
+        }
+        .progress-bar-wrapper {
+            flex: 1; min-width: 200px;
+            background: var(--border); height: 12px; border-radius: 6px; overflow: hidden;
+        }
+        .progress-bar {
+            height: 100%;
+            background: linear-gradient(90deg, var(--success), var(--secondary));
+            width: 0%; transition: width 0.4s ease;
+        }
+        .progress-info { font-weight: 700; font-size: 0.95rem; color: var(--primary); min-width: 130px; text-align: right; }
+        .save-indicator {
+            font-size: 0.85rem; color: var(--success);
+            opacity: 0; transition: opacity 0.3s;
+            display: flex; align-items: center; gap: 5px; font-weight: 600;
+        }
+        .save-indicator.show { opacity: 1; }
+
+        .main-container {
+            max-width: 1100px; margin: 30px auto; padding: 0 20px;
+            display: grid; grid-template-columns: 280px 1fr; gap: 25px;
+        }
+
+        .sidebar {
+            background: var(--card); border-radius: 12px; padding: 20px;
+            box-shadow: var(--shadow); height: fit-content;
+            position: sticky; top: 80px;
+        }
+        .sidebar h3 {
+            font-size: 1rem; color: var(--primary);
+            margin-bottom: 15px; padding-bottom: 10px;
+            border-bottom: 2px solid var(--border);
+        }
+        .nav-grid {
+            display: grid; grid-template-columns: repeat(5, 1fr); gap: 6px;
+        }
+        .nav-btn {
+            width: 42px; height: 42px; border: 2px solid var(--border);
+            background: white; border-radius: 8px; cursor: pointer;
+            font-size: 0.85rem; font-weight: 700; color: var(--text-light);
+            transition: all 0.2s;
+        }
+        .nav-btn:hover { border-color: var(--primary-light); color: var(--primary); transform: scale(1.05); }
+        .nav-btn.answered { background: var(--success); color: white; border-color: var(--success); }
+        .nav-btn.current { background: var(--primary); color: white; border-color: var(--primary); transform: scale(1.1); box-shadow: 0 2px 8px rgba(30,58,138,0.3); }
+        .sidebar-legend {
+            margin-top: 20px; font-size: 0.8rem; color: var(--text-light);
+        }
+        .legend-item { display: flex; align-items: center; gap: 8px; margin-bottom: 6px; }
+        .legend-color { width: 16px; height: 16px; border-radius: 4px; }
+
+        .question-area { min-height: 500px; }
+        .question-card {
+            background: var(--card); border-radius: 12px; padding: 30px;
+            box-shadow: var(--shadow); animation: slideIn 0.3s ease;
+        }
+        @keyframes slideIn {
+            from { opacity: 0; transform: translateX(20px); }
+            to { opacity: 1; transform: translateX(0); }
+        }
+
+        .dimension-badge {
+            display: inline-block; background: var(--primary); color: white;
+            padding: 5px 14px; border-radius: 20px; font-size: 0.8rem;
+            font-weight: 700; margin-bottom: 15px; text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        .question-number {
+            font-size: 0.9rem; color: var(--text-light); margin-bottom: 10px; font-weight: 600;
+        }
+        .question-context {
+            background: #f8fafc; border-left: 4px solid var(--info);
+            padding: 15px; margin: 15px 0; border-radius: 8px;
+            font-size: 0.88rem; color: var(--text-light); font-style: italic;
+        }
+        .question-context strong { color: var(--text); font-style: normal; }
+        .question-text {
+            font-size: 1.1rem; font-weight: 700; margin-bottom: 25px; color: var(--primary);
+        }
+
+        .options-container { display: flex; flex-direction: column; gap: 12px; }
+        .option-label {
+            display: flex; align-items: flex-start; gap: 12px;
+            padding: 16px; background: #f8fafc; border: 2px solid var(--border);
+            border-radius: 10px; cursor: pointer; transition: all 0.2s;
+        }
+        .option-label:hover {
+            border-color: var(--primary-light); background: #eff6ff;
+            transform: translateX(5px);
+        }
+        .option-label input[type="radio"] {
+            margin-top: 3px; accent-color: var(--primary);
+            width: 20px; height: 20px; flex-shrink: 0;
+        }
+        .option-label.selected {
+            border-color: var(--primary); background: #dbeafe;
+            box-shadow: 0 2px 8px rgba(59, 130, 246, 0.2);
+        }
+        .option-label.selected .option-text { font-weight: 700; color: var(--primary); }
+        .option-text { font-size: 0.95rem; line-height: 1.6; }
+
+        .nav-buttons {
+            display: flex; justify-content: space-between; align-items: center;
+            margin-top: 25px; gap: 10px; flex-wrap: wrap;
+        }
+        .btn {
+            padding: 12px 24px; border: none; border-radius: 10px;
+            font-weight: 700; cursor: pointer; transition: all 0.2s;
+            font-size: 0.95rem; display: flex; align-items: center; gap: 8px;
+        }
+        .btn-prev { background: var(--border); color: var(--text); }
+        .btn-prev:hover { background: #cbd5e1; }
+        .btn-next { background: var(--primary); color: white; }
+        .btn-next:hover { background: var(--primary-light); }
+        .btn-finish { background: var(--success); color: white; }
+        .btn-finish:hover { background: #059669; }
+        .btn-reset { background: var(--danger); color: white; margin-top: 20px; }
+        .btn-reset:hover { background: #dc2626; }
+        .btn-print { background: var(--info); color: white; }
+        .btn-print:hover { background: #0284c7; }
+
+        .action-buttons {
+            display: flex; gap: 12px; justify-content: center;
+            margin: 30px 0; flex-wrap: wrap;
+        }
+
+        .results-panel {
+            display: none; background: var(--card); border-radius: 12px;
+            padding: 35px; box-shadow: var(--shadow-lg); margin-top: 30px;
+            animation: fadeIn 0.5s;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .results-header { text-align: center; padding-bottom: 20px; border-bottom: 2px solid var(--border); margin-bottom: 25px; }
+        .score-circle {
+            width: 180px; height: 180px; border-radius: 50%;
+            display: flex; flex-direction: column; align-items: center; justify-content: center;
+            margin: 25px auto; font-size: 3rem; font-weight: 800;
+            border: 10px solid; position: relative;
+        }
+        .score-circle span { font-size: 1rem; font-weight: 600; margin-top: 5px; }
+        .level-display { font-size: 1.5rem; font-weight: 700; margin: 15px 0; }
+        .feedback-box {
+            background: #f8fafc; border-left: 5px solid var(--primary-light);
+            padding: 20px; border-radius: 8px; margin: 15px 0;
+        }
+        .feedback-box h3 { color: var(--primary); margin-bottom: 10px; font-size: 1.15rem; }
+
+        .modal {
+            display: none; position: fixed; top: 0; left: 0;
+            width: 100%; height: 100%; background: rgba(0,0,0,0.6);
+            z-index: 1000; align-items: center; justify-content: center;
+        }
+        .modal.show { display: flex; }
+        .modal-content {
+            background: white; padding: 30px; border-radius: 12px;
+            max-width: 500px; width: 90%; text-align: center;
+            box-shadow: var(--shadow-lg);
+        }
+        .modal-content h3 { color: var(--primary); margin-bottom: 15px; font-size: 1.3rem; }
+        .modal-content p { margin-bottom: 20px; font-size: 1rem; }
+        .modal-buttons { display: flex; gap: 10px; justify-content: center; }
+
+        @media (max-width: 768px) {
+            .main-container { grid-template-columns: 1fr; }
+            .sidebar { position: static; }
+            .nav-grid { grid-template-columns: repeat(8, 1fr); }
+            .header h1 { font-size: 1.3rem; }
+        }
+
+        @media print {
+            .sidebar, .nav-buttons, .action-buttons, .progress-container { display: none !important; }
+            .main-container { grid-template-columns: 1fr; }
+            body { background: white; }
+            .question-card { box-shadow: none; border: 1px solid #ccc; page-break-inside: avoid; }
+            .results-panel { display: block !important; box-shadow: none; }
+        }
+    </style>
+</head>
+<body>
+
+<div class="header">
+    <h1>🎓 Simulador EVDO</h1>
+    <p>Habilidades y Actitudes de Responsabilidad Profesional | 49 Ítems</p>
+</div>
+
+<div class="progress-container">
+    <div class="timer" id="timer">️ 00:00:00</div>
+    <div class="progress-bar-wrapper">
+        <div class="progress-bar" id="progressBar"></div>
+    </div>
+    <div class="progress-info" id="progressText">0 / 49 (0%)</div>
+    <div class="save-indicator" id="saveIndicator">💾 Guardado</div>
+</div>
+
+<div class="main-container">
+    <aside class="sidebar">
+        <h3> Navegación de Preguntas</h3>
+        <div class="nav-grid" id="navGrid"></div>
+        <div class="sidebar-legend">
+            <div class="legend-item">
+                <div class="legend-color" style="background: var(--success);"></div>
+                <span>Respondida</span>
+            </div>
+            <div class="legend-item">
+                <div class="legend-color" style="background: var(--primary);"></div>
+                <span>Pregunta actual</span>
+            </div>
+            <div class="legend-item">
+                <div class="legend-color" style="background: white; border: 2px solid var(--border);"></div>
+                <span>Sin responder</span>
+            </div>
+        </div>
+    </aside>
+
+    <main class="question-area">
+        <div class="question-card" id="questionCard"></div>
+        
+        <div class="nav-buttons">
+            <button class="btn btn-prev" id="btnPrev" onclick="prevQuestion()">◀ Anterior</button>
+            <button class="btn btn-next" id="btnNext" onclick="nextQuestion()">Siguiente ▶</button>
+            <button class="btn btn-finish" id="btnFinish" onclick="finishTest()" style="display:none;">✅ Finalizar Evaluación</button>
+        </div>
+
+        <div class="action-buttons">
+            <button class="btn btn-reset" onclick="resetTest()">🔄 Reiniciar Evaluación</button>
+        </div>
+
+        <div class="results-panel" id="resultsPanel"></div>
+    </main>
+</div>
+
+<div class="modal" id="confirmModal">
+    <div class="modal-content">
+        <h3 id="modalTitle">Confirmar</h3>
+        <p id="modalMessage">¿Está seguro?</p>
+        <div class="modal-buttons">
+            <button class="btn btn-prev" onclick="closeModal()">Cancelar</button>
+            <button class="btn btn-next" id="modalConfirmBtn">Confirmar</button>
+        </div>
+    </div>
+</div>
+
+<script>
+const questions = [
+    // MEJORA INSTITUCIONAL (1-3)
+    { dim: "Mejora Institucional", text: "Para la mejora institucional:", options: [
+        "Participo en iniciativas de innovación educativa como apoyo a la mejora institucional, asistiendo a las capacitaciones sugeridas por la institución.",
+        "Participo en los procesos de innovación educativa y reflexiono sobre cómo mi contribución impacta en la mejora institucional, identificando logros y áreas de oportunidad que permiten ajustar las prácticas innovadoras para optimizar los resultados esperados.",
+        "Participo activamente en las iniciativas de innovación educativa, reflexiono sobre el impacto de mi contribución en la implementación, propongo ideas y fomento la colaboración con mis pares en los procesos de innovación educativa para la mejora institucional."
+    ]},
+    { dim: "Mejora Institucional", text: "Para la mejora institucional:", options: [
+        "Participo en actividades del plan anual institucional como apoyo a los procesos de la institución, cumpliendo con las tareas asignadas y asistiendo a las convocatorias programadas.",
+        "Participo en actividades del plan anual institucional y reflexiono sobre la importancia de mi intervención para apoyar los procesos institucionales y lograr las metas establecidas en el plan anual de la institución.",
+        "Participo en actividades del plan anual institucional, reflexiono y promuevo la participación de otros actores en las actividades del plan anual para fortalecer los procesos de mi institución."
+    ]},
+    { dim: "Mejora Institucional", text: "Para la mejora institucional:", options: [
+        "Establezco interacciones profesionales con los actores de la comunidad educativa para la mejora del clima institucional, que favorecen la comunicación básica entre los miembros de la comunidad.",
+        "Establezco vínculos profesionales con los actores de la comunidad educativa e impulso iniciativas de colaboración que mejoran el clima institucional, que fortalecen la convivencia y el trabajo en equipo dentro de la institución.",
+        "Establezco vínculos profesionales con los actores de la comunidad educativa que mejoran el clima institucional, y promuevo redes de participación y aprendizaje con comunidades externas para fortalecer la convivencia y el trabajo colaborativo."
+    ]},
+
+    // DISEÑO DE LA PLANIFICACIÓN CURRICULAR (4-7)
+    { dim: "Diseño de la Planificación Curricular", text: "Para el diseño de la planificación curricular:", options: [
+        "Conozco parcialmente los principios y valores de la institución educativa, lo que me lleva a consultar el documento institucional antes de planificar para lograr una incorporación inicial de estos referentes en el diseño curricular de mis clases.",
+        "Conozco e incorporo en la planificación curricular los principios y valores de la institución educativa, articulándolos con los demás componentes curriculares para que orienten de manera transversal el proceso de enseñanza-aprendizaje en las unidades didácticas.",
+        "Conozco e incorporo en la planificación curricular los principios y valores de la institución educativa, articulándolos con los demás componentes curriculares, y comparto buenas prácticas con mis pares para el diseño de planificaciones."
+    ]},
+    { dim: "Diseño de la Planificación Curricular", text: "Para el diseño de la planificación curricular:", context: "Considere el concepto: se entiende por metas de aprendizaje los enunciados que especifican qué se espera que el estudiantado logre comprender, aplicar o demostrar al finalizar un proceso de enseñanza, en términos de desempeños observables y alcanzables en un tiempo determinado.", options: [
+        "Diseño metas de aprendizaje para el estudiantado y las incorporo en la planificación curricular, estableciendo criterios claros de logro que orientan las actividades de enseñanza.",
+        "Diseño metas de aprendizaje y las incorporo en la planificación curricular, articulándolas con los demás componentes curriculares para garantizar la coherencia interna del proceso formativo en cada unidad.",
+        "Diseño metas de aprendizaje y las incorporo en la planificación curricular, articulándolas con los demás componentes curriculares, y comparto buenas prácticas con mis pares para el diseño de metas de aprendizaje."
+    ]},
+    { dim: "Diseño de la Planificación Curricular", text: "Para el diseño de la planificación curricular:", options: [
+        "Conozco parcialmente el perfil de salida del estudiantado establecido en el plan educativo de mi institución, lo que me lleva a consultar dicho documento antes de planificar.",
+        "Conozco e incorporo en la planificación curricular el perfil de salida del estudiantado establecido en el plan educativo de mi institución, articulándolo con los demás componentes curriculares.",
+        "Conozco e incorporo en la planificación curricular el perfil de salida del estudiantado establecido en el plan educativo de mi institución, articulándolo con los demás componentes curriculares, y comparto buenas prácticas con mis pares para el diseño de planificaciones."
+    ]},
+    { dim: "Diseño de la Planificación Curricular", text: "Para el diseño de la planificación curricular:", options: [
+        "Conozco parcialmente las estrategias metodológicas activas, por lo que necesito repasar su contenido para poder utilizarlas en mi práctica pedagógica.",
+        "Conozco y aplico estrategias metodológicas activas que forman parte de la educación para el desarrollo sostenible, en mi práctica pedagógica.",
+        "Conozco las estrategias metodológicas activas y las aplico en mi práctica pedagógica, y trabajo con otros/as docentes en prácticas interdisciplinarias para integrar estos principios."
+    ]},
+
+    // PROMOCIÓN DE LA SEGURIDAD ESCOLAR (8-14)
+    { dim: "Promoción de la Seguridad Escolar", text: "Para la promoción de la seguridad escolar:", options: [
+        "Conozco parcialmente las acciones y protocolos del Plan de Gestión de Riesgos de la institución educativa, lo que me lleva a consultar el documento de referencia antes de actuar ante una posible situación de riesgo.",
+        "Conozco y comprendo las acciones y protocolos del Plan de Gestión de Riesgos de la institución educativa, lo que me permite utilizarlos como guía ante un evento de riesgo, promoviendo la seguridad escolar.",
+        "Conozco y comprendo las acciones y protocolos del Plan de Gestión de Riesgos de la institución educativa, lo que me permite utilizarlos como guía ante un evento de riesgo, y comparto con mis pares aspectos relevantes para favorecer su comprensión y promover la seguridad escolar."
+    ]},
+    { dim: "Promoción de la Seguridad Escolar", text: "Para la promoción de la seguridad escolar:", options: [
+        "Conozco parcialmente los procedimientos de actuación frente a amenazas biológicas (epidemias), lo que me lleva a consultar el documento de referencia antes de actuar ante una posible situación de riesgo.",
+        "Conozco y comprendo los procedimientos de actuación frente a amenazas biológicas (epidemias), lo que me permite utilizarlos como guía ante un evento de riesgo, promoviendo la seguridad escolar.",
+        "Conozco y comprendo los procedimientos de actuación frente a amenazas biológicas (epidemias) para utilizarlos como guía ante un evento de riesgo, y comparto con mis pares los aspectos relevantes para favorecer su comprensión y promover la seguridad escolar."
+    ]},
+    { dim: "Promoción de la Seguridad Escolar", text: "Para la promoción de la seguridad escolar:", options: [
+        "Conozco parcialmente los procedimientos de actuación frente a amenazas geológicas (sismos, deslizamientos), lo que me lleva a consultar el documento de referencia antes de actuar ante una posible situación de riesgo.",
+        "Conozco y comprendo los procedimientos de actuación frente a amenazas geológicas (sismos, deslizamientos), lo que me permite utilizarlos como guía ante un evento de riesgo, promoviendo la seguridad escolar.",
+        "Conozco y comprendo los procedimientos de actuación frente a amenazas geológicas (sismos, deslizamientos) y los utilizo como guía ante un evento de riesgo, asimismo comparto con mis pares los aspectos relevantes para favorecer su comprensión y promover la seguridad escolar."
+    ]},
+    { dim: "Promoción de la Seguridad Escolar", text: "Para la promoción de la seguridad escolar:", options: [
+        "Conozco parcialmente los procedimientos de actuación frente a amenazas antrópicas (explosiones, robos), lo que me lleva a consultar el documento de referencia antes de actuar ante una posible situación de riesgo.",
+        "Conozco y comprendo los procedimientos de actuación frente a amenazas antrópicas (explosiones, robos), lo que me permite utilizarlos como guía ante un evento de riesgo, promoviendo la seguridad escolar.",
+        "Conozco y comprendo los procedimientos de actuación frente a amenazas antrópicas (explosiones, robos), y los utilizo como guía ante un evento de riesgo, así como los comparto con mis pares los aspectos relevantes para favorecer su comprensión y promover la seguridad escolar."
+    ]},
+    { dim: "Promoción de la Seguridad Escolar", text: "Para la promoción de la seguridad escolar:", options: [
+        "Conozco parcialmente los procedimientos de actuación frente a amenazas de degradación ambiental (incendios forestales), lo que me lleva a consultar el documento de referencia antes de actuar ante una posible situación de riesgo.",
+        "Conozco y comprendo los procedimientos de actuación frente a amenazas de degradación ambiental (incendios forestales), lo que me permite utilizarlos como guía ante un evento de riesgo, promoviendo la seguridad escolar.",
+        "Conozco y comprendo los procedimientos de actuación frente a amenazas de degradación ambiental (incendios forestales) y los utilizo como guía ante un evento de riesgo, así también los comparto con mis pares los aspectos relevantes para favorecer su comprensión y promover la seguridad escolar."
+    ]},
+    { dim: "Promoción de la Seguridad Escolar", text: "Para la promoción de la seguridad escolar:", options: [
+        "Conozco parcialmente los procedimientos de actuación frente a amenazas hidrometeorológicas (inundaciones), lo que me lleva a consultar el documento de referencia antes de actuar ante una posible situación de riesgo.",
+        "Conozco y comprendo los procedimientos de actuación frente a amenazas hidrometeorológicas (inundaciones), lo que me permite utilizarlos como guía ante un evento de riesgo, promoviendo la seguridad escolar.",
+        "Conozco y comprendo los procedimientos de actuación frente a amenazas hidrometeorológicas (inundaciones) y los utilizo como guía ante un evento de riesgo, así también comparto con mis pares los aspectos relevantes para favorecer su comprensión y promover la seguridad escolar."
+    ]},
+    { dim: "Promoción de la Seguridad Escolar", text: "Para la promoción de la seguridad escolar:", options: [
+        "Conozco parcialmente los procedimientos de actuación frente a amenazas tecnológicas (ciberacoso, fallas de red), lo que me lleva a consultar el documento de referencia.",
+        "Conozco y comprendo los procedimientos de actuación frente a amenazas tecnológicas, lo que me permite utilizarlos como guía ante un evento de riesgo, promoviendo la seguridad escolar.",
+        "Conozco y comprendo los procedimientos de actuación frente a amenazas tecnológicas y los utilizo como guía, asimismo comparto con mis pares los aspectos relevantes para favorecer su comprensión."
+    ]},
+
+    // CUIDADO DE RECURSOS E INFRAESTRUCTURA (15-17)
+    { dim: "Cuidado de Recursos e Infraestructura", text: "Para el cuidado de los recursos e infraestructura educativa:", context: "Considere los conceptos:<br>• <strong>Infraestructura:</strong> son los espacios físicos, edificios, aulas, talleres, laboratorios y áreas comunes.<br>• <strong>Equipamiento:</strong> es el mobiliario, equipos tecnológicos, instrumentos, materiales didácticos fijos y sistemas de apoyo.<br>• <strong>Recursos educativos:</strong> son los materiales fungibles, textos, herramientas de aprendizaje y todo bien mueble destinado al proceso de enseñanza-aprendizaje.", options: [
+        "Establezco acuerdos y compromisos con el estudiantado sobre el cuidado de la infraestructura, equipamiento y recursos educativos del aula que se me ha asignado con seguimiento durante las actividades cotidianas.",
+        "Establezco acuerdos y compromisos con el estudiantado sobre el cuidado de la infraestructura, equipamiento y recursos educativos de la institución educativa, extendiendo dichos acuerdos a espacios comunes como en las áreas especializadas que utilizo con el estudiantado.",
+        "Me involucro activamente con la comunidad educativa para consolidar una cultura institucional de cuidado de la infraestructura, equipamiento y recursos educativos."
+    ]},
+    { dim: "Cuidado de Recursos e Infraestructura", text: "Para el cuidado de los recursos e infraestructura educativa:", context: "Considere los conceptos:<br>• <strong>Infraestructura:</strong> son los espacios físicos, edificios, aulas, talleres, laboratorios y áreas comunes.<br>• <strong>Equipamiento:</strong> se refiere al mobiliario, equipos tecnológicos, instrumentos, materiales didácticos fijos y sistemas de apoyo.<br>• <strong>Recursos educativos:</strong> son los materiales fungibles, textos, herramientas de aprendizaje y todo bien mueble destinado al proceso de enseñanza-aprendizaje.", options: [
+        "Fomento el cuidado de la infraestructura, equipamiento y recursos educativos del aula que se me ha asignado, centrando mis acciones en la conservación y uso adecuado de los bienes bajo mi responsabilidad directa durante la jornada escolar.",
+        "Fomento prácticas de cuidado de la infraestructura, equipamiento y recursos educativos de la institución educativa, promoviendo su conservación tanto en las áreas comunes como en las áreas especializadas que utilizo con el estudiantado.",
+        "Me involucro activamente con la comunidad educativa para fomentar la práctica del cuidado de la infraestructura, equipamiento y recursos educativos."
+    ]},
+    { dim: "Cuidado de Recursos e Infraestructura", text: "Para el cuidado de los recursos e infraestructura educativa:", options: [
+        "Reporto las fallas en la infraestructura y equipamiento del aula a las autoridades correspondientes cuando ocurren.",
+        "Reporto las fallas en la infraestructura y equipamiento de la institución educativa, promoviendo su conservación tanto en las áreas comunes como en las áreas especializadas.",
+        "Me involucro activamente con la comunidad educativa para fomentar la práctica del cuidado y reporte oportuno de la infraestructura, equipamiento y recursos educativos."
+    ]},
+
+    // APRECIACIÓN DEL PROGRESO DEL ESTUDIANTADO (18-29)
+    { dim: "Apreciación del Progreso del Estudiantado", text: "Para apreciar el progreso del estudiantado:", options: [
+        "Incorporo la heteroevaluación en el proceso de aprendizaje y oriento al estudiante en la identificación de los logros y dificultades de aprendizaje.",
+        "Incorporo la heteroevaluación, la autoevaluación y la coevaluación en el proceso de aprendizaje y oriento al estudiante en la identificación de los logros y dificultades de aprendizaje.",
+        "Incorporo la heteroevaluación, la autoevaluación y la coevaluación; promuevo que el estudiantado construya criterios propios de valoración y aprovecho la información generada para retroalimentar tanto el proceso individual como colectivo de aprendizaje."
+    ]},
+    { dim: "Apreciación del Progreso del Estudiantado", text: "Para apreciar el progreso del estudiantado:", options: [
+        "Reporto los resultados de evaluación al grupo de estudiantes de acuerdo con los tiempos que establece la institución educativa.",
+        "Brindo retroalimentación general y constante al grupo de estudiantes orientada a mejorar el aprendizaje a partir de los resultados de evaluación.",
+        "Brindo retroalimentación personalizada y constante a cada estudiante a partir de los resultados de evaluación y comparto con mis pares buenas prácticas para la retroalimentación del aprendizaje."
+    ]},
+    { dim: "Apreciación del Progreso del Estudiantado", text: "Para apreciar el progreso del estudiantado:", options: [
+        "Diseño instrumentos de evaluación diversos, alineados con las habilidades desarrolladas, para valorar el progreso del estudiantado.",
+        "Diseño y socializo instrumentos de evaluación diversos, alineados con las habilidades desarrolladas, para valorar el progreso del estudiantado.",
+        "Diseño y socializo instrumentos de evaluación diversos, alineados con las habilidades desarrolladas, compartiendo con mis pares instrumentos para favorecer su uso en la valoración del progreso del estudiantado."
+    ]},
+    { dim: "Apreciación del Progreso del Estudiantado", text: "Para apreciar el progreso del estudiantado:", context: "Considere los conceptos:<br>• <strong>Lenguaje positivo centrado en metas de aprendizaje:</strong> es una forma de comunicación asertiva que utiliza expresiones claras, respetuosas y alentadoras para resaltar las fortalezas del estudiantado y ofrecer sugerencias específicas de mejora. Su propósito es transformar la evaluación en una guía efectiva que fomente la autonomía y la motivación intrínseca.", options: [
+        "Comunico los resultados de aprendizaje e información oficial al estudiantado con una aproximación inicial al uso del lenguaje positivo orientado al alcance de metas de aprendizaje.",
+        "Comunico los resultados de aprendizaje e información oficial al estudiantado y analizo las estrategias y técnicas de lenguaje positivo que empleo, reconociendo su orientación al alcance de metas de aprendizaje.",
+        "Comunico los resultados de aprendizaje e información oficial al estudiantado, analizo las estrategias y técnicas de lenguaje positivo que empleo y comparto buenas prácticas con colegas para fortalecer una cultura comunicativa positiva en la institución educativa."
+    ]},
+    { dim: "Apreciación del Progreso del Estudiantado", text: "Para apreciar el progreso del estudiantado:", options: [
+        "Identifico el ritmo de aprendizaje del grupo de estudiantes y utilizo esta información para valorar de manera general su progreso.",
+        "Identifico los ritmos y las necesidades de aprendizaje del estudiantado y utilizo esta información para valorar de manera diferenciada el progreso de cada estudiante, ajustando mis estrategias según las características específicas.",
+        "Identifico los ritmos y las necesidades de aprendizaje del estudiantado, valoro su progreso de forma individualizada y comparto estrategias con mis pares para fortalecer la atención a la diversidad."
+    ]},
+    { dim: "Apreciación del Progreso del Estudiantado", text: "Para apreciar el progreso del estudiantado:", options: [
+        "Ejecuto sesiones de refuerzo pedagógico para estudiantes con bajo desempeño académico y registro formalmente su asistencia y cumplimiento.",
+        "Ejecuto sesiones de refuerzo pedagógico para estudiantes con bajo desempeño académico e identifico y valoro avances, dificultades y áreas de mejora en su aprendizaje.",
+        "Ejecuto sesiones de refuerzo pedagógico para estudiantes con bajo desempeño académico; identifico y valoro avances, dificultades y áreas de mejora y comparto buenas prácticas con mis pares para fortalecer sus aprendizajes."
+    ]},
+    { dim: "Apreciación del Progreso del Estudiantado", text: "Para apreciar el progreso del estudiantado:", options: [
+        "Ejecuto sesiones de tutorías individuales para estudiantes con bajo desempeño académico, registrando formalmente su asistencia y cumplimiento.",
+        "Ejecuto sesiones de tutorías individuales para estudiantes con bajo desempeño académico e identifico y valoro avances, dificultades y áreas de mejora en su aprendizaje.",
+        "Ejecuto sesiones de tutorías individuales para estudiantes con bajo desempeño académico; identifico y valoro avances, dificultades y áreas de mejora al igual que comparto buenas prácticas con mis pares para fortalecer sus aprendizajes."
+    ]},
+    { dim: "Apreciación del Progreso del Estudiantado", text: "Para apreciar el progreso del estudiantado:", options: [
+        "Dialogo con representantes legales sobre el progreso académico y el desarrollo socioemocional del grupo de estudiantes y establezco compromisos conjuntos para apoyar su formación integral.",
+        "Dialogo con representantes legales, establezco compromisos conjuntos y doy seguimiento a los acuerdos para mejorar el progreso académico y el desarrollo socioemocional del grupo de estudiantes.",
+        "Dialogo con representantes legales, doy seguimiento a los acuerdos y compromisos establecidos y comparto con mis pares estrategias de diálogo para mediar la comunicación y fortalecer el seguimiento académico y socioemocional del grupo de estudiantes."
+    ]},
+    { dim: "Apreciación del Progreso del Estudiantado", text: "Para apreciar el progreso del estudiantado:", options: [
+        "Dialogo con representantes legales sobre el progreso académico de estudiantes con bajo rendimiento y establezco compromisos conjuntos para apoyar su proceso de aprendizaje.",
+        "Dialogo con representantes legales, establezco compromisos conjuntos y doy seguimiento a los acuerdos para mejorar el progreso académico de estudiantes con bajo rendimiento.",
+        "Dialogo con representantes legales, doy seguimiento a los acuerdos y compromisos establecidos y comparto con mis pares estrategias para mediar la comunicación y fortalecer el seguimiento académico de estudiantes con bajo rendimiento."
+    ]},
+    { dim: "Apreciación del Progreso del Estudiantado", text: "Para apreciar el progreso del estudiantado:", context: "Considere los siguientes conceptos:<br>• <strong>Lenguaje sexista:</strong> se refiere al uso de expresiones lingüísticas que, de manera explícita o implícita, discriminan, subordinan, invisibilizan o minusvaloran a las personas por su sexo.<br>• <strong>Estereotipos de género:</strong> son imágenes, ideas o creencias preconcebidas y simplificadas sobre los atributos, roles o comportamientos que 'deberían' tener hombres y mujeres.", options: [
+        "Comunico los resultados de aprendizaje e información oficial al estudiantado con una aproximación inicial al uso de un lenguaje libre de sesgos y estereotipos de género.",
+        "Comunico los resultados de aprendizaje e información oficial al estudiantado, analizo mis estrategias y técnicas para el uso de un lenguaje libre de sesgos y estereotipos de género.",
+        "Comunico los resultados de aprendizaje e información oficial al estudiantado, analizo el uso de estrategias de comunicación libres de sesgos y estereotipos y comparto buenas prácticas con colegas para fortalecer la comunicación con enfoque de equidad de género."
+    ]},
+    { dim: "Apreciación del Progreso del Estudiantado", text: "Para apreciar el progreso del estudiantado:", options: [
+        "Utilizo la retroalimentación escrita de manera ocasional para corregir errores en las tareas asignadas.",
+        "Utilizo la retroalimentación escrita y oral de manera constante, orientada a la mejora del aprendizaje a partir de los resultados de evaluación.",
+        "Utilizo la retroalimentación escrita y oral de manera personalizada y constante, y comparto con mis pares buenas prácticas para la retroalimentación del aprendizaje."
+    ]},
+
+    // APRECIACIÓN DEL PROGRESO CON NEE (30-32)
+    { dim: "Apreciación del Progreso del Estudiantado con NEE", text: "Para apreciar el progreso del estudiantado con necesidades educativas específicas (NEE):", options: [
+        "Ejecuto adaptaciones técnicas iniciales en los instrumentos de evaluación alineados con las habilidades del estudiantado con NEE, por lo que requieren una actualización metodológica para lograr una mejor valoración.",
+        "Adapto y socializo instrumentos de evaluación alineados con las habilidades del estudiantado con NEE para valorar su progreso, promoviendo redes de trabajo colaborativo con mis pares para sistematizar y replicar las mejores prácticas de evaluación inclusiva.",
+        "Adapto y socializo instrumentos de evaluación alineados con las habilidades del estudiantado con NEE, orientando activamente a mis pares sobre los criterios necesarios para garantizar una evaluación justa y equitativa."
+    ]},
+    { dim: "Apreciación del Progreso del Estudiantado con NEE", text: "Para apreciar el progreso de estudiantes con necesidades educativas específicas (NEE):", options: [
+        "Dialogo con representantes legales sobre el progreso académico y el desarrollo socioemocional de estudiantes con NEE y establezco compromisos conjuntos para apoyar su formación integral.",
+        "Dialogo con representantes legales, establezco compromisos conjuntos y doy seguimiento a los acuerdos para mejorar el progreso académico y el desarrollo socioemocional de estudiantes con NEE.",
+        "Dialogo con representantes legales, doy seguimiento a los acuerdos y compromisos establecidos y comparto con mis pares estrategias para mediar la comunicación y fortalecer el seguimiento académico y socioemocional de estudiantes con NEE."
+    ]},
+    { dim: "Apreciación del Progreso del Estudiantado con NEE", text: "Para apreciar el progreso del estudiantado con necesidades educativas específicas (NEE):", options: [
+        "Conozco parcialmente los protocolos y/o procedimientos para la detección, seguimiento y derivación de posibles casos de estudiantes con NEE, por lo que necesito repasar su contenido para poder aplicarlos como guía.",
+        "Conozco y comprendo los protocolos y/o procedimientos para la detección, seguimiento y derivación de posibles casos de estudiantes con NEE, lo que me permite aplicarlos como guía si fuese necesario para garantizar la correcta atención del estudiantado.",
+        "Conozco y comprendo los protocolos y/o procedimientos para la detección, seguimiento y derivación de posibles casos de estudiantes con NEE, lo que me permite aplicarlos como guía si fuese necesario, al igual que comparto con mis pares aspectos relevantes para favorecer su comprensión y garantizar la correcta atención del estudiantado."
+    ]},
+
+    // MEJORAR MI PRÁCTICA PEDAGÓGICA (33)
+    { dim: "Mejorar mi Práctica Pedagógica", text: "Para mejorar mi práctica pedagógica:", context: "Considere los conceptos:<br>• <strong>Convivencia:</strong> se refiere al fomento de relaciones armónicas y la resolución pacífica de conflictos basada en el diálogo y el respeto mutuo.<br>• <strong>Interculturalidad:</strong> es el reconocimiento y valoración de las diversas identidades culturales.<br>• <strong>Equidad de Género:</strong> implica garantizar igualdad de derechos, oportunidades y responsabilidades para hombres y mujeres.", options: [
+        "Conozco parcialmente los principios de convivencia, interculturalidad y equidad de género, por lo que necesito repasar su contenido para poder utilizarlos en mi práctica pedagógica.",
+        "Conozco y aplico los principios de convivencia, interculturalidad y equidad de género, que forman parte de la educación para el desarrollo sostenible, en mi práctica pedagógica.",
+        "Conozco los principios de convivencia, interculturalidad y equidad de género de la educación para el desarrollo sostenible y los aplico en mi práctica pedagógica, y trabajo con otros/as docentes en prácticas interdisciplinarias para integrar estos principios."
+    ]},
+
+    // PROMOCIÓN Y PREVENCIÓN DE BIENESTAR INTEGRAL (34-38)
+    { dim: "Promoción y Prevención de Bienestar Integral", text: "Para la promoción y prevención de bienestar integral del estudiantado:", options: [
+        "Conozco parcialmente los procedimientos institucionales frente a conflictos en el entorno escolar, por lo que necesito repasar su contenido para poder utilizarlos como guía ante un evento de esta naturaleza.",
+        "Conozco y comprendo los procedimientos institucionales frente a conflictos en el entorno escolar, lo que me permite utilizarlos como guía ante un evento de conflicto, promoviendo así la prevención y el bienestar integral del estudiantado.",
+        "Conozco y comprendo los procedimientos institucionales frente a conflictos en el entorno escolar, lo que me permite utilizarlos como guía ante un evento de esta naturaleza, y brindo apoyo y guía a mis pares en su comprensión, para promover la prevención y el bienestar integral del estudiantado."
+    ]},
+    { dim: "Promoción y Prevención de Bienestar Integral", text: "Para la promoción y prevención de bienestar integral del estudiantado:", options: [
+        "Conozco parcialmente las rutas y protocolos de actuación frente a situaciones de violencia digital, por lo que necesito repasar su contenido para poder utilizarlos como guía ante un evento de violencia.",
+        "Conozco y comprendo las rutas y protocolos vigentes frente a situaciones de violencia digital, lo que me permite utilizarlos como guía ante un evento de violencia, promoviendo así la prevención y el bienestar integral del estudiantado.",
+        "Conozco y comprendo las rutas y protocolos vigentes frente a situaciones de violencia digital, lo que me permite utilizarlos como guía ante un evento de violencia, y comparto con mis pares aspectos relevantes para favorecer su comprensión, promoviendo así la prevención y el bienestar integral del estudiantado."
+    ]},
+    { dim: "Promoción y Prevención de Bienestar Integral", text: "Para la promoción y prevención de bienestar integral del estudiantado:", options: [
+        "Conozco parcialmente las rutas y protocolos de actuación frente a situaciones de violencia psicológica, por lo que necesito repasar su contenido para poder utilizarlos como guía ante un evento de riesgo.",
+        "Conozco y comprendo las rutas y protocolos vigentes frente a situaciones de violencia psicológica, lo que me permite utilizarlos como guía ante un evento de violencia, promoviendo así la prevención y el bienestar integral del estudiantado.",
+        "Conozco y comprendo las rutas y protocolos vigentes frente a situaciones de violencia psicológica, lo que me permite utilizarlos como guía ante un evento de violencia, y comparto con mis pares aspectos relevantes para favorecer su comprensión, promoviendo así la prevención y el bienestar integral del estudiantado."
+    ]},
+    { dim: "Promoción y Prevención de Bienestar Integral", text: "Para la promoción y prevención de bienestar integral del estudiantado:", options: [
+        "Conozco parcialmente las rutas y protocolos de actuación frente a situaciones de violencia física, por lo que necesito repasar su contenido para poder utilizarlos como guía ante un evento de violencia.",
+        "Conozco y comprendo las rutas y protocolos vigentes frente a situaciones de violencia física, lo que me permite utilizarlos como guía ante un evento de violencia, promoviendo así la prevención y el bienestar integral del estudiantado.",
+        "Conozco y comprendo las rutas y protocolos vigentes frente a situaciones de violencia física, lo que me permite utilizarlos como guía ante un evento de violencia, y comparto con mis pares aspectos relevantes para favorecer su comprensión, promoviendo así la prevención y el bienestar integral del estudiantado."
+    ]},
+    { dim: "Promoción y Prevención de Bienestar Integral", text: "Para la promoción y prevención de bienestar integral del estudiantado:", options: [
+        "Conozco parcialmente las rutas y protocolos de actuación frente a situaciones de violencia sexual, por lo que necesito repasar su contenido para poder utilizarlos como guía ante un evento de violencia.",
+        "Conozco y comprendo las rutas y protocolos vigentes frente a situaciones de violencia sexual, lo que me permite utilizarlos como guía ante un evento de violencia, promoviendo así la prevención y el bienestar integral del estudiantado.",
+        "Conozco y comprendo las rutas y protocolos vigentes frente a situaciones de violencia sexual, lo que me permite utilizarlos como guía ante un evento de violencia, y comparto con mis pares aspectos relevantes para favorecer su comprensión, promoviendo así la prevención y el bienestar integral del estudiantado."
+    ]},
+
+    // FORTALECIMIENTO DE CONVIVENCIA ESCOLAR PACÍFICA (39)
+    { dim: "Fortalecimiento de Convivencia Escolar Pacífica", text: "Para el fortalecimiento de convivencia escolar pacífica:", options: [
+        "Aplico estrategias del Código de Convivencia institucional para la resolución pacífica de conflictos y la promoción de buenas prácticas de convivencia.",
+        "Aplico estrategias del Código de Convivencia institucional para la resolución pacífica de conflictos y la promoción de buenas prácticas de convivencia y reflexiono sobre su impacto en el estudiantado.",
+        "Lidero con mis pares la implementación del Código de Convivencia institucional para la resolución pacífica de conflictos y la promoción de buenas prácticas de convivencia, a fin de fortalecer la convivencia escolar."
+    ]},
+
+    // EDUCACIÓN PARA EL DESARROLLO SOSTENIBLE (40)
+    { dim: "Educación para el Desarrollo Sostenible", text: "Para la educación para el desarrollo sostenible (Dimensión Ambiental):", options: [
+        "Conozco parcialmente los principios de cuidado del medio ambiente, sensibilización frente al cambio climático, cuidado de la biodiversidad, por lo que necesito repasar su contenido para poder utilizarlos en mi práctica pedagógica.",
+        "Conozco y aplico los principios de cuidado del medio ambiente, sensibilización frente al cambio climático, cuidado de la biodiversidad en mi práctica pedagógica.",
+        "Conozco los principios de cuidado del medio ambiente, sensibilización frente al cambio climático, cuidado de la biodiversidad y los aplico en mi práctica pedagógica, y trabajo con otros/as docentes en prácticas interdisciplinarias para integrar estos principios."
+    ]},
+
+    // FORTALECER MIS PROCESOS DE GESTIÓN DOCENTE (41-43)
+    { dim: "Fortalecer mis Procesos de Gestión Docente", text: "Para fortalecer mis procesos de gestión docente:", options: [
+        "Implemento prácticas de enseñanza-aprendizaje innovadoras a partir de mi experiencia docente o consejos de mis pares, para el fortalecimiento de los procesos de gestión docente.",
+        "Implemento prácticas de enseñanza-aprendizaje innovadoras que fortalecen mis procesos de gestión docente, a partir de la búsqueda individual de información basada en evidencia científica.",
+        "Implemento prácticas de enseñanza-aprendizaje innovadoras que fortalecen mis procesos de gestión docente, a partir de la búsqueda individual de información basada en evidencia científica y comparto los hallazgos con otros/as docentes."
+    ]},
+    { dim: "Fortalecer mis Procesos de Gestión Docente", text: "Para fortalecer mis procesos de gestión docente:", options: [
+        "Aplico estrategias para la promoción de ambientes de convivencia en el aula a partir de mi experiencia docente o consejos de mis pares que fortalecen mis procesos de gestión docente.",
+        "Aplico estrategias para la promoción de ambientes de convivencia en el aula que fortalecen mis procesos de gestión docente, a partir de la búsqueda individual de información basada en evidencia científica.",
+        "Aplico estrategias para la promoción de ambientes de convivencia en el aula que fortalecen mis procesos de gestión docente, a partir de la búsqueda individual de información basada en evidencia científica y comparto los hallazgos con otros/as docentes."
+    ]},
+    { dim: "Fortalecer mis Procesos de Gestión Docente", text: "Para fortalecer mis procesos de gestión docente:", options: [
+        "Utilizo herramientas digitales básicas para el registro de calificaciones y asistencia de los estudiantes.",
+        "Utilizo herramientas digitales avanzadas para el seguimiento del progreso académico y socioemocional de los estudiantes.",
+        "Utilizo herramientas digitales avanzadas para el seguimiento del progreso académico y socioemocional, y comparto con mis pares buenas prácticas para optimizar la gestión docente."
+    ]},
+
+    // IMPLEMENTACIÓN DE ESTRATEGIAS PEDAGÓGICAS EFECTIVAS (44-46)
+    { dim: "Implementación de Estrategias Pedagógicas Efectivas", text: "Para la implementación de estrategias pedagógicas efectivas:", context: "Considere los conceptos:<br>• <strong>Hermanamientos institucionales:</strong> procesos de intercambio y colaboración entre docentes de una misma institución.<br>• <strong>Co-docencia:</strong> modalidad de trabajo en la que dos o más docentes planifican, desarrollan y evalúan conjuntamente.", options: [
+        "Participo, generalmente, en prácticas colaborativas con mis pares sobre estrategias pedagógicas efectivas.",
+        "Participo en prácticas de colaboración con mis pares sobre estrategias pedagógicas efectivas y aplico individualmente aquellas que considero más efectivas.",
+        "Lidero prácticas de colaboración con mis pares sobre estrategias pedagógicas efectivas y apoyo en el diseño y la implementación conjunta de las estrategias más pertinentes."
+    ]},
+    { dim: "Implementación de Estrategias Pedagógicas Efectivas", text: "Para la implementación de estrategias pedagógicas efectivas:", context: "Considere los conceptos:<br>• <strong>Hermanamientos interinstitucionales:</strong> espacios de articulación y aprendizaje conjunto entre docentes de diferentes instituciones.<br>• <strong>Diálogo o trabajo grupal:</strong> estrategias de interacción profesional entre docentes.", options: [
+        "Participo, generalmente, en prácticas colaborativas con mis pares sobre estrategias pedagógicas efectivas.",
+        "Participo en prácticas de colaboración con mis pares sobre estrategias pedagógicas efectivas y aplico individualmente aquellas que considero más efectivas.",
+        "Lidero prácticas de colaboración con mis pares sobre estrategias pedagógicas efectivas y apoyo en el diseño y la implementación conjunta de las estrategias más pertinentes."
+    ]},
+    { dim: "Implementación de Estrategias Pedagógicas Efectivas", text: "Para la implementación de estrategias pedagógicas efectivas:", options: [
+        "Aplico estrategias de evaluación formativa de manera individual en mi aula.",
+        "Aplico estrategias de evaluación formativa y reflexiono sobre su impacto en el aprendizaje del estudiantado.",
+        "Lidero con mis pares la implementación de estrategias de evaluación formativa a nivel institucional, a fin de fortalecer los procesos de enseñanza-aprendizaje."
+    ]},
+
+    // FORTALECER MIS HABILIDADES ACTITUDINALES (47-48)
+    { dim: "Fortalecer mis Habilidades Actitudinales", text: "Para fortalecer mis habilidades actitudinales:", options: [
+        "Participo en procesos de acompañamiento pedagógico o mentoría realizados por la autoridad competente y sigo estrictamente las orientaciones recibidas para desarrollar mis habilidades actitudinales.",
+        "Participo en procesos de acompañamiento pedagógico o mentoría realizados por la autoridad competente, adapto las recomendaciones recibidas y diseño nuevas estrategias para desarrollar mis habilidades actitudinales.",
+        "Participo en procesos de acompañamiento pedagógico o mentoría realizados por la autoridad competente, desarrollo un ciclo de mejora continua y evalúo su efectividad para fortalecer mis habilidades actitudinales."
+    ]},
+    { dim: "Fortalecer mis Habilidades Actitudinales", text: "Para fortalecer mis habilidades actitudinales:", options: [
+        "Participo en procesos de acompañamiento pedagógico o mentoría realizados por la autoridad competente y sigo estrictamente las orientaciones recibidas para desarrollar mis habilidades actitudinales.",
+        "Participo en procesos de acompañamiento pedagógico o mentoría realizados por la autoridad competente, adapto las recomendaciones recibidas y diseño nuevas estrategias para desarrollar mis habilidades actitudinales.",
+        "Participo en procesos de acompañamiento pedagógico o mentoría realizados por la autoridad competente, desarrollo un ciclo de mejora continua y evalúo su efectividad para fortalecer mis habilidades actitudinales."
+    ]},
+
+    // ACTUALIZACIÓN DE MIS CONOCIMIENTOS DISCIPLINARES (49)
+    { dim: "Actualización de mis Conocimientos Disciplinares", text: "Para la actualización de mis conocimientos disciplinares:", context: "Considere los conceptos:<br>• <strong>Hermanamientos institucionales e interinstitucionales.</strong><br>• <strong>Co-docencia y Diálogo o trabajo grupal.</strong>", options: [
+        "Participo en prácticas de colaboración con mis pares sobre nuevos aportes o actualizaciones de los conocimientos disciplinares.",
+        "Participo en prácticas de colaboración con mis pares sobre nuevos aportes o actualizaciones de los conocimientos disciplinares e incorporo estos conocimientos en la práctica pedagógica.",
+        "Participo en prácticas de colaboración con mis pares sobre nuevos aportes o actualizaciones de los conocimientos disciplinares y guío la incorporación de esos nuevos conocimientos en la práctica pedagógica."
+    ]}
+];
+
+// ==========================================
+// VARIABLES GLOBALES
+// ==========================================
+let currentQuestion = 0;
+let answers = {};
+let startTime = null;
+let timerInterval = null;
+const STORAGE_KEY = 'evdo_simulador_49_pro_v1';
+
+// ==========================================
+// INICIALIZACIÓN
+// ==========================================
+function init() {
+    loadProgress();
+    renderNavGrid();
+    renderQuestion();
+    startTimer();
+    updateProgress();
+}
+
+function startTimer() {
+    if (!startTime) startTime = Date.now();
+    timerInterval = setInterval(() => {
+        const elapsed = Math.floor((Date.now() - startTime) / 1000);
+        const hours = String(Math.floor(elapsed / 3600)).padStart(2, '0');
+        const minutes = String(Math.floor((elapsed % 3600) / 60)).padStart(2, '0');
+        const seconds = String(elapsed % 60).padStart(2, '0');
+        document.getElementById('timer').textContent = `⏱️ ${hours}:${minutes}:${seconds}`;
+    }, 1000);
+}
+
+// ==========================================
+// RENDERIZADO
+// ==========================================
+function renderNavGrid() {
+    const grid = document.getElementById('navGrid');
+    grid.innerHTML = '';
+    questions.forEach((_, idx) => {
+        const btn = document.createElement('button');
+        btn.className = 'nav-btn';
+        btn.textContent = idx + 1;
+        if (answers[idx] !== undefined) btn.classList.add('answered');
+        if (idx === currentQuestion) btn.classList.add('current');
+        btn.onclick = () => goToQuestion(idx);
+        grid.appendChild(btn);
+    });
+}
+
+function renderQuestion() {
+    const q = questions[currentQuestion];
+    const card = document.getElementById('questionCard');
+    
+    let contextHTML = q.context ? `<div class="question-context">${q.context}</div>` : '';
+    
+    let optionsHTML = '';
+    q.options.forEach((opt, idx) => {
+        const selected = answers[currentQuestion] === idx ? 'selected' : '';
+        optionsHTML += `
+            <label class="option-label ${selected}" onclick="selectOption(${idx})">
+                <input type="radio" name="q${currentQuestion}" value="${idx}" ${selected ? 'checked' : ''}>
+                <div class="option-text">${opt}</div>
+            </label>
+        `;
+    });
+
+    card.innerHTML = `
+        <div class="dimension-badge">${q.dim}</div>
+        <div class="question-number">Pregunta ${currentQuestion + 1} de ${questions.length}</div>
+        <div class="question-text">${q.text}</div>
+        ${contextHTML}
+        <div class="options-container">
+            ${optionsHTML}
+        </div>
+    `;
+
+    document.getElementById('btnPrev').style.display = currentQuestion === 0 ? 'none' : 'flex';
+    document.getElementById('btnNext').style.display = currentQuestion === questions.length - 1 ? 'none' : 'flex';
+    document.getElementById('btnFinish').style.display = currentQuestion === questions.length - 1 ? 'flex' : 'none';
+    
+    renderNavGrid();
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+function selectOption(optIdx) {
+    answers[currentQuestion] = optIdx;
+    renderQuestion();
+    updateProgress();
+    saveProgress();
+}
+
+function updateProgress() {
+    const answered = Object.keys(answers).length;
+    const percent = (answered / questions.length) * 100;
+    document.getElementById('progressBar').style.width = `${percent}%`;
+    document.getElementById('progressText').textContent = `${answered} / ${questions.length} (${percent.toFixed(0)}%)`;
+}
+
+// ==========================================
+// NAVEGACIÓN
+// ==========================================
+function goToQuestion(idx) {
+    currentQuestion = idx;
+    renderQuestion();
+}
+
+function nextQuestion() {
+    if (currentQuestion < questions.length - 1) {
+        currentQuestion++;
+        renderQuestion();
+    }
+}
+
+function prevQuestion() {
+    if (currentQuestion > 0) {
+        currentQuestion--;
+        renderQuestion();
+    }
+}
+
+// ==========================================
+// GUARDADO Y CARGA
+// ==========================================
+function saveProgress() {
+    const data = { answers, currentQuestion, startTime };
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+    
+    const indicator = document.getElementById('saveIndicator');
+    indicator.classList.add('show');
+    setTimeout(() => indicator.classList.remove('show'), 1500);
+}
+
+function loadProgress() {
+    const saved = localStorage.getItem(STORAGE_KEY);
+    if (saved) {
+        const data = JSON.parse(saved);
+        answers = data.answers || {};
+        currentQuestion = data.currentQuestion || 0;
+        startTime = data.startTime || Date.now();
+    }
+}
+
+function resetTest() {
+    showModal(
+        '⚠️ Reiniciar Evaluación',
+        '¿Está seguro de que desea borrar todas sus respuestas y reiniciar la evaluación? Esta acción no se puede deshacer.',
+        () => {
+            localStorage.removeItem(STORAGE_KEY);
+            answers = {};
+            currentQuestion = 0;
+            startTime = Date.now();
+            document.getElementById('resultsPanel').style.display = 'none';
+            renderQuestion();
+            updateProgress();
+            closeModal();
+        }
+    );
+}
+
+// ==========================================
+// FINALIZAR Y CALCULAR
+// ==========================================
+function finishTest() {
+    const answered = Object.keys(answers).length;
+    if (answered < questions.length) {
+        showModal(
+            '⚠️ Evaluación Incompleta',
+            `Ha respondido ${answered} de ${questions.length} preguntas. ¿Desea finalizar de todas formas? Las preguntas sin responder se calificarán con 0 puntos.`,
+            () => {
+                showResults();
+                closeModal();
+            }
+        );
+        return;
+    }
+    showResults();
+}
+
+function showResults() {
+    clearInterval(timerInterval);
+    
+    let totalScore = 0;
+    const maxScore = questions.length * 3;
+    const dimScores = {};
+
+    questions.forEach((q, idx) => {
+        const answer = answers[idx];
+        if (answer !== undefined) {
+            const score = answer + 1; // Opción 0 = 1 punto, Opción 1 = 2 puntos, Opción 2 = 3 puntos
+            totalScore += score;
+            if (!dimScores[q.dim]) dimScores[q.dim] = { total: 0, max: 0 };
+            dimScores[q.dim].total += score;
+            dimScores[q.dim].max += 3;
+        }
+    });
+
+    const percent = (totalScore / maxScore) * 100;
+    let level, color, feedback, recommendation;
+
+    if (percent >= 85) {
+        level = "🌟 Destacado"; color = "var(--success)";
+        feedback = "Su práctica docente refleja un dominio excepcional de las habilidades y actitudes de responsabilidad profesional. Demuestra liderazgo, colaboración activa con pares y un compromiso sólido con la mejora continua institucional. Es un referente para la comunidad educativa.";
+        recommendation = "Continúe liderando procesos de innovación y compartiendo sus buenas prácticas. Considere documentar sus experiencias exitosas para presentarlas en comunidades de aprendizaje o eventos institucionales.";
+    } else if (percent >= 70) {
+        level = "✅ Satisfactorio"; color = "var(--info)";
+        feedback = "Su desempeño es altamente satisfactorio y cumple con los estándares de responsabilidad profesional. Posee una base sólida, aunque existen áreas específicas donde puede fortalecer su práctica mediante mayor colaboración con pares.";
+        recommendation = "Identifique las dimensiones donde obtuvo menor puntaje y establezca un plan de mejora personal. Participe más activamente en comunidades de aprendizaje docente y busque oportunidades de liderazgo en proyectos institucionales.";
+    } else if (percent >= 50) {
+        level = "⚠️ En Proceso"; color = "var(--warning)";
+        feedback = "Su práctica docente presenta aciertos importantes, pero también revela oportunidades de mejora en la colaboración con pares, el liderazgo pedagógico y la integración de buenas prácticas.";
+        recommendation = "Es fundamental revisar sus prácticas respecto a la colaboración con colegas, la participación en iniciativas institucionales y el compartir buenas prácticas. Solicite acompañamiento a su coordinador y participe activamente en comunidades de aprendizaje.";
+    } else {
+        level = "🔴 Inicial"; color = "var(--danger)";
+        feedback = "Los resultados indican que sus prácticas actuales requieren fortalecimiento significativo en múltiples dimensiones de responsabilidad profesional.";
+        recommendation = "Es prioritario un plan de mejora inmediato. Se recomienda solicitar acompañamiento pedagógico, participar en capacitaciones institucionales e integrarse activamente en comunidades de aprendizaje.";
+    }
+
+    let dimResultsHTML = '';
+    Object.keys(dimScores).forEach(dim => {
+        const dimPercent = (dimScores[dim].total / dimScores[dim].max) * 100;
+        dimResultsHTML += `
+            <div class="feedback-box" style="border-left-color: ${dimPercent >= 85 ? 'var(--success)' : dimPercent >= 70 ? 'var(--info)' : dimPercent >= 50 ? 'var(--warning)' : 'var(--danger)'}">
+                <h4 style="color: var(--primary); margin-bottom: 8px;">${dim}</h4>
+                <div style="font-size: 1.1rem; font-weight: 700; margin-bottom: 8px;">${dimScores[dim].total} / ${dimScores[dim].max} (${dimPercent.toFixed(0)}%)</div>
+                <div style="background: var(--border); height: 8px; border-radius: 4px; overflow: hidden;">
+                    <div style="height: 100%; width: ${dimPercent}%; background: ${dimPercent >= 85 ? 'var(--success)' : dimPercent >= 70 ? 'var(--info)' : dimPercent >= 50 ? 'var(--warning)' : 'var(--danger)'}; border-radius: 4px;"></div>
+                </div>
+            </div>
+        `;
+    });
+
+    const elapsed = Math.floor((Date.now() - startTime) / 1000);
+    const minutes = Math.floor(elapsed / 60);
+    const seconds = elapsed % 60;
+
+    const resultsPanel = document.getElementById('resultsPanel');
+    resultsPanel.innerHTML = `
+        <div class="results-header">
+            <h2 style="color: var(--primary); margin-bottom: 10px;">📊 Resultado de la Evaluación EVDO</h2>
+            <p style="color: var(--text-light);">Habilidades y Actitudes de Responsabilidad Profesional</p>
+            <div class="score-circle" style="border-color: ${color}; color: ${color};">
+                ${percent.toFixed(1)}%
+                <span>${totalScore} / ${maxScore} puntos</span>
+            </div>
+            <div class="level-display" style="color: ${color};">
+                Nivel: ${level}
+            </div>
+            <div style="color: var(--text-light); font-size: 0.95rem; margin-top: 10px;">
+                ⏱️ Tiempo total: ${minutes} min ${seconds} seg | ✅ Respondidas: ${Object.keys(answers).length} / ${questions.length}
+            </div>
+        </div>
+
+        <h3 style="color: var(--primary); margin: 25px 0 15px; font-size: 1.2rem;">📈 Desempeño por Dimensión</h3>
+        ${dimResultsHTML}
+
+        <div class="feedback-box">
+            <h3>💡 Retroalimentación Pedagógica</h3>
+            <p>${feedback}</p>
+        </div>
+
+        <div class="feedback-box" style="border-left-color: var(--warning); background: #fffbeb;">
+            <h3> Recomendaciones Estratégicas</h3>
+            <p>${recommendation}</p>
+        </div>
+
+        <div class="action-buttons">
+            <button class="btn btn-print" onclick="window.print()">🖨️ Imprimir / Guardar PDF</button>
+            <button class="btn btn-reset" onclick="resetTest()">🔄 Reiniciar Evaluación</button>
+        </div>
+    `;
+
+    resultsPanel.style.display = 'block';
+    resultsPanel.scrollIntoView({ behavior: 'smooth' });
+}
+
+// ==========================================
+// MODAL
+// ==========================================
+function showModal(title, message, onConfirm) {
+    document.getElementById('modalTitle').textContent = title;
+    document.getElementById('modalMessage').textContent = message;
+    document.getElementById('confirmModal').classList.add('show');
+    document.getElementById('modalConfirmBtn').onclick = onConfirm;
+}
+
+function closeModal() {
+    document.getElementById('confirmModal').classList.remove('show');
+}
+
+// Iniciar aplicación
+init();
+</script>
+
+</body>
+</html>
